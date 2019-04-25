@@ -9,7 +9,8 @@ import csw.params.events.{Event, EventName, ObserveEvent, SystemEvent}
 import csw.time.core.models.{TAITime, UTCTime}
 import enumeratum._
 import io.bullet.borer._
-import io.bullet.borer.derivation.MapBasedCodecs._
+import CodecTypeAlias.Codecs
+import Codecs._
 import play.api.libs.json.Format
 
 import scala.reflect.ClassTag
@@ -54,21 +55,30 @@ trait LowPriorityCborSupport {
     deriveCodec[Pack[T]]
   }
 
-  implicit def paramEncExistential: Encoder[Parameter[_]] = { (w: Writer, value: Parameter[_]) =>
+  implicit lazy val paramEncExistential: Encoder[Parameter[_]] = { (w: Writer, value: Parameter[_]) =>
     val encoder: Encoder[Parameter[Any]] = value.keyType.paramEncWithKey.asInstanceOf[Encoder[Parameter[Any]]]
     encoder.write(w, value.asInstanceOf[Parameter[Any]])
   }
 
-  implicit def paramDecExistential: Decoder[Parameter[_]] = { r: Reader =>
-    r.readMapHeader()
-    r.readString()
-    val keyTypeName = new String(r.readTextBytes())
-    val keyType     = KeyType.withNameInsensitive(keyTypeName)
-    r.readString()
+  implicit lazy val paramDecExistential: Decoder[Parameter[_]] = {
+    if (CodecTypeAlias.isMapBased) paramDecExistentialMapBased else paramDecExistentialArrayBased
+  }
+
+  private lazy val paramDecExistentialMapBased: Decoder[Parameter[_]] = { r: Reader =>
+    r.readMapHeader(2)
+    r.readString("keyType")
+    val keyType = KeyType.withNameInsensitive(r.readString())
+    r.readString("parameter")
     r.read()(keyType.paramDecWithoutKey)
   }
 
-  implicit def structCodec: Codec[Struct] = deriveCodec[Struct]
+  private lazy val paramDecExistentialArrayBased: Decoder[Parameter[_]] = { r: Reader =>
+    r.readArrayHeader(2)
+    val keyType = KeyType.withNameInsensitive(r.readString())
+    r.read()(keyType.paramDecWithoutKey)
+  }
+
+  implicit lazy val structCodec: Codec[Struct] = deriveCodec[Struct]
 
   // ************************ EVENT CODECS ********************
 
