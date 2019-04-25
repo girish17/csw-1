@@ -5,6 +5,7 @@ import java.time.Instant
 import com.github.ghik.silencer.silent
 import csw.params.core.generics.{KeyType, Parameter}
 import csw.params.core.models._
+import csw.params.events.{Event, EventName, ObserveEvent, SystemEvent}
 import csw.time.core.models.{TAITime, UTCTime}
 import enumeratum._
 import io.bullet.borer._
@@ -26,8 +27,8 @@ object CborSupport extends LowPriorityCborSupport {
 trait LowPriorityCborSupport {
   implicit lazy val choiceCodec: Codec[Choice] = deriveCodec[Choice]
   implicit lazy val raDecCodec: Codec[RaDec]   = deriveCodec[RaDec]
-  implicit lazy val tsCodec: Codec[TS]         = deriveCodec[TS]
 
+  implicit lazy val tsCodec: Codec[TS]       = deriveCodec[TS]
   implicit lazy val insEnc: Encoder[Instant] = Encoder.fromCodec[TS].compose[Instant](x => TS(x.getEpochSecond, x.getNano))
   implicit lazy val insDec: Decoder[Instant] = Decoder.fromCodec[TS].map[Instant](x => Instant.ofEpochSecond(x.seconds, x.nanos))
 
@@ -53,26 +54,31 @@ trait LowPriorityCborSupport {
     deriveCodec[Pack[T]]
   }
 
-  implicit def paramEncExistential: Encoder[Parameter[_]] = (w: Writer, value: Parameter[_]) => {
+  implicit def paramEncExistential: Encoder[Parameter[_]] = { (w: Writer, value: Parameter[_]) =>
     val encoder: Encoder[Parameter[Any]] = value.keyType.paramEncWithKey.asInstanceOf[Encoder[Parameter[Any]]]
-    encoder.write(
-      w,
-      value.asInstanceOf[Parameter[Any]]
-    )
+    encoder.write(w, value.asInstanceOf[Parameter[Any]])
   }
 
-  implicit def paramDecExistential: Decoder[Parameter[_]] = (r: Reader) => {
+  implicit def paramDecExistential: Decoder[Parameter[_]] = { r: Reader =>
     r.readMapHeader()
     r.readString()
     val keyTypeName = new String(r.readTextBytes())
     val keyType     = KeyType.withNameInsensitive(keyTypeName)
     r.readString()
-    val value = r.read()(keyType.paramDecWithoutKey)
-    r.readEndOfInput()
-    value
+    r.read()(keyType.paramDecWithoutKey)
   }
 
   implicit def structCodec: Codec[Struct] = deriveCodec[Struct]
+
+  // ************************ EVENT CODECS ********************
+
+  implicit lazy val idCodec: Codec[Id]               = deriveCodec[Id]
+  implicit lazy val prefixCodec: Codec[Prefix]       = deriveCodec[Prefix]
+  implicit lazy val eventNameCodec: Codec[EventName] = deriveCodec[EventName]
+
+  implicit lazy val sysEventCodec: Codec[SystemEvent]  = deriveCodec[SystemEvent]
+  implicit lazy val obsEventCodec: Codec[ObserveEvent] = deriveCodec[ObserveEvent]
+  implicit lazy val eventCodec: Codec[Event]           = deriveCodec[Event]
 }
 
 case class Pack[T](keyType: String, parameter: Parameter[T])
