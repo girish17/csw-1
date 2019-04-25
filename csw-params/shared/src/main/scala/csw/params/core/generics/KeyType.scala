@@ -1,10 +1,12 @@
 package csw.params.core.generics
 
-import csw.params.core.formats.JsonSupport
+import csw.params.core.formats.CborSupport._
+import csw.params.core.formats.{CborSupport, JsonSupport}
 import csw.params.core.models.Units.second
 import csw.params.core.models.{Units, _}
 import csw.time.core.models.{TAITime, UTCTime}
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import io.bullet.borer.{Decoder, Encoder}
 import play.api.libs.json._
 
 import scala.collection.immutable
@@ -15,11 +17,14 @@ import scala.reflect.ClassTag
  *
  * @tparam S the type of values that will sit against the key in Parameter
  */
-sealed class KeyType[S: Format: ClassTag] extends EnumEntry with Serializable {
+sealed class KeyType[S: Format: ClassTag: Encoder: Decoder] extends EnumEntry with Serializable {
   override def hashCode: Int              = toString.hashCode
   override def equals(that: Any): Boolean = that.toString == this.toString
 
   private[params] def paramFormat: Format[Parameter[S]] = Parameter.parameterFormat[S]
+
+  private[params] def paramEncWithKey: Encoder[Parameter[S]]    = CborSupport.paramEnc[S]
+  private[params] def paramDecWithoutKey: Decoder[Parameter[S]] = CborSupport.paramCodec[S].decoder
 }
 
 /**
@@ -27,7 +32,7 @@ sealed class KeyType[S: Format: ClassTag] extends EnumEntry with Serializable {
  *
  * @tparam S the type of values that will sit against the key in Parameter
  */
-class SimpleKeyType[S: Format: ClassTag] extends KeyType[S] {
+class SimpleKeyType[S: Format: ClassTag: Encoder: Decoder] extends KeyType[S] {
 
   /**
    * Make a Key from provided name
@@ -45,7 +50,7 @@ class SimpleKeyType[S: Format: ClassTag] extends KeyType[S] {
  * @param defaultUnits applicable units
  * @tparam S the type of values that will sit against the key in Parameter
  */
-sealed class SimpleKeyTypeWithUnits[S: Format: ClassTag](defaultUnits: Units) extends KeyType[S] {
+sealed class SimpleKeyTypeWithUnits[S: Format: ClassTag: Encoder: Decoder](defaultUnits: Units) extends KeyType[S] {
 
   /**
    * Make a Key from provided name
@@ -59,12 +64,12 @@ sealed class SimpleKeyTypeWithUnits[S: Format: ClassTag](defaultUnits: Units) ex
 /**
  * A KeyType that holds array
  */
-class ArrayKeyType[S: Format: ClassTag] extends SimpleKeyType[ArrayData[S]]
+class ArrayKeyType[S: Format: ClassTag: Encoder: Decoder] extends SimpleKeyType[ArrayData[S]]
 
 /**
  * A KeyType that holds Matrix
  */
-class MatrixKeyType[S: Format: ClassTag] extends SimpleKeyType[MatrixData[S]]
+class MatrixKeyType[S: Format: ClassTag: Encoder: Decoder] extends SimpleKeyType[MatrixData[S]]
 
 /**
  * KeyTypes defined for consumption in Scala code
