@@ -44,10 +44,8 @@ object BigCborTest extends App {
 }
 
 object SimpleCborTest extends App {
-  import csw.params.core.formats.JsonSupport._
-
   private val jintKey                   = JKeyType.IntKey.make("ints")
-  private val param: Parameter[Integer] = jintKey.set(5, 6, 7)
+  private val param: Parameter[Integer] = jintKey.set(1, 2, 3)
   val bytes: Array[Byte]                = Cbor.encode(param).toByteArray
 
   val result = Cbor
