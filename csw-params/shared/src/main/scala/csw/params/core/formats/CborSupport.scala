@@ -5,7 +5,7 @@ import java.time.Instant
 import csw.params.core.generics.{KeyType, Parameter}
 import csw.params.core.models._
 import csw.params.events.{Event, EventName, ObserveEvent, SystemEvent}
-import csw.time.core.models.{TAITime, UTCTime}
+import csw.time.core.models.{TAITime, TMTTime, UTCTime}
 import enumeratum._
 import io.bullet.borer._
 import io.bullet.borer.derivation.MapBasedCodecs._
@@ -30,6 +30,7 @@ trait LowPriorityCborSupport {
 
   implicit lazy val utcTimeEncoder: Codec[UTCTime] = deriveCodec[UTCTime]
   implicit lazy val taiTimeEncoder: Codec[TAITime] = deriveCodec[TAITime]
+  implicit lazy val tmtTimeEncoder: Codec[TMTTime] = deriveCodec[TMTTime]
 
   implicit def arrayDataEnc[T: Encoder: Decoder: ClassTag]: Codec[ArrayData[T]]   = deriveCodec[ArrayData[T]]
   implicit def matrixDataEnc[T: Encoder: Decoder: ClassTag]: Codec[MatrixData[T]] = deriveCodec[MatrixData[T]]
