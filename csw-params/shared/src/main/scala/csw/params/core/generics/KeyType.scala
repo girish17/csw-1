@@ -9,7 +9,7 @@ import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import io.bullet.borer.{Decoder, Encoder}
 import play.api.libs.json._
 
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 import scala.reflect.ClassTag
 
 /**
@@ -23,8 +23,8 @@ sealed class KeyType[S: Format: ClassTag: Encoder: Decoder] extends EnumEntry wi
 
   private[params] def paramFormat: Format[Parameter[S]] = Parameter.parameterFormat[S]
 
-  private[params] def paramEncWithKey: Encoder[Parameter[S]]    = CborSupport.paramEnc[S]
-  private[params] def paramDecWithoutKey: Decoder[Parameter[S]] = CborSupport.paramCodec[S].decoder
+  private[params] def paramEncoder: Encoder[Parameter[S]]         = CborSupport.paramCodec[S].encoder
+  private[params] def waDecoder: Decoder[mutable.WrappedArray[S]] = Decoder.forIterable[S, mutable.WrappedArray]
 }
 
 /**
