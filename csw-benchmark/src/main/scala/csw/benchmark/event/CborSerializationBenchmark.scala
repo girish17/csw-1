@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import csw.params.core.generics.{KeyType, Parameter}
 import csw.params.events.SystemEvent
+import csw.params.javadsl.JKeyType
 import io.bullet.borer.Cbor
 import org.openjdk.jmh.annotations._
 
@@ -43,13 +44,21 @@ object BigCborTest extends App {
 }
 
 object SimpleCborTest extends App {
-  private val intKey                = KeyType.IntKey.make("ints")
-  private val param: Parameter[Int] = intKey.set(1, 2, 3)
-  val bytes: Array[Byte]            = Cbor.encode(param).toByteArray
-  val param2: Parameter[_] = Cbor
+  import csw.params.core.formats.JsonSupport._
+
+  private val intKey                    = KeyType.IntKey.make("ints")
+  private val jintKey                   = JKeyType.IntKey.make("ints")
+  private val param: Parameter[Integer] = jintKey.set(5, 6, 7)
+  private val param2: Parameter[Int]    = intKey.set(5, 6, 7)
+//  private val params: Set[Parameter[_]] = Set(param, param2)
+  val bytes: Array[Byte] = Cbor.encode(param2).toByteArray
+
+  val result = Cbor
     .decode(bytes)
     .withPrintLogging()
     .to[Parameter[_]]
     .value
-  println(param2)
+    .asInstanceOf[Parameter[Integer]]
+
+  println(result)
 }
