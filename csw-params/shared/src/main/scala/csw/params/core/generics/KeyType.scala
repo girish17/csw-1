@@ -3,7 +3,7 @@ package csw.params.core.generics
 import csw.params.core.formats.CborSupport._
 import csw.params.core.formats.{CborSupport, JsonSupport}
 import csw.params.core.models.Units.second
-import csw.params.core.models.{Units, _}
+import csw.params.core.models._
 import csw.time.core.models.{TAITime, UTCTime}
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import io.bullet.borer.{Decoder, Encoder}
@@ -21,10 +21,10 @@ sealed class KeyType[S: Format: ClassTag: Encoder: Decoder] extends EnumEntry wi
   override def hashCode: Int              = toString.hashCode
   override def equals(that: Any): Boolean = that.toString == this.toString
 
-  private[params] def paramFormat: Format[Parameter[S]] = Parameter.parameterFormat[S]
+  private[params] lazy val paramFormat: Format[Parameter[S]] = Parameter.parameterFormat[S]
 
-  private[params] def paramEncoder: Encoder[Parameter[S]]         = CborSupport.paramCodec[S].encoder
-  private[params] def waDecoder: Decoder[mutable.WrappedArray[S]] = Decoder.forIterable[S, mutable.WrappedArray]
+  private[params] lazy val paramEncoder: Encoder[Parameter[S]]         = CborSupport.paramCodec[S].encoder
+  private[params] lazy val waDecoder: Decoder[mutable.WrappedArray[S]] = Decoder.forIterable[S, mutable.WrappedArray]
 }
 
 /**

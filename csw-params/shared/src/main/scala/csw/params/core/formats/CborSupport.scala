@@ -8,7 +8,7 @@ import csw.params.events.{Event, EventName, ObserveEvent, SystemEvent}
 import csw.time.core.models.{TAITime, UTCTime}
 import enumeratum._
 import io.bullet.borer._
-import io.bullet.borer.derivation.ArrayBasedCodecs._
+import io.bullet.borer.derivation.MapBasedCodecs._
 import play.api.libs.json.Format
 
 import scala.collection.mutable
