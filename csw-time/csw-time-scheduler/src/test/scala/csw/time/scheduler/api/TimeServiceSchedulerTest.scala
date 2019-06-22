@@ -9,24 +9,21 @@ import akka.actor.typed
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.adapter.TypedActorSystemOps
 import akka.testkit.TestProbe
-import csw.time.clock.natives.models.TMTClock
 import csw.time.core.models.{TAITime, UTCTime}
 import csw.time.scheduler.TimeServiceSchedulerFactory
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.FunSuiteLike
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
-class TimeServiceSchedulerTest extends ScalaTestWithActorTestKit(ManualTime.config) with FunSuiteLike with BeforeAndAfterAll {
+class TimeServiceSchedulerTest extends ScalaTestWithActorTestKit(ManualTime.config) with FunSuiteLike {
 
   private val manualTime = ManualTime()(system)
   private val jitter     = 10
 
 //  private implicit val system1: typed.ActorSystem[_] = typed.ActorSystem(Behavior.empty, "test")
   private val timeService = TimeServiceSchedulerFactory.make()
-
-  override protected def beforeAll(): Unit = TMTClock.clock.setTaiOffset(37)
 
   // DEOPSCSW-542: Schedule a task to execute in future
   List(

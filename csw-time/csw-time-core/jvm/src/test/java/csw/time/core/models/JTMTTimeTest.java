@@ -1,10 +1,9 @@
 package csw.time.core.models;
 
-import csw.time.clock.natives.models.TMTClock$;
+import csw.time.clock.natives.models.TimeConstants$;
 import csw.time.core.models.utils.JTestProperties;
 import csw.time.core.models.utils.TestProperties;
 import csw.time.core.models.utils.TestUtil;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.scalatestplus.junit.JUnitSuite;
 
@@ -16,14 +15,9 @@ import static org.junit.Assert.assertFalse;
 
 public class JTMTTimeTest extends JUnitSuite {
 
-    private static int TaiOffset = 37;
-    private int jitter  = 10;
+    private static int TaiOffset = TimeConstants$.MODULE$.taiOffset();
+    private int jitter = 10;
     private TestProperties testProperties = JTestProperties.instance();
-
-    @BeforeClass
-    public static void setup() {
-        TMTClock$.MODULE$.clock().setTaiOffset(TaiOffset);
-    }
 
     //------------------------------UTC-------------------------------
 
